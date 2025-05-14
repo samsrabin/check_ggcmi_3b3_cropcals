@@ -34,11 +34,7 @@ for f, file in enumerate(file_list):
     if time_units_in == "years since 1601-1-1 00:00:00":
         new_times = ds["time"].values + 1601
         new_time_da = xr.DataArray(
-            data=new_times.astype(int),
-            dims=["time"],
-            attrs={
-                "units": "year"
-            }
+            data=new_times.astype(int), dims=["time"], attrs={"units": "year"}
         )
         ds["time"] = new_time_da
     else:
@@ -46,9 +42,9 @@ for f, file in enumerate(file_list):
 
     # Get all decades in this file
     years = ds["time"].values
-    decade_starts = np.array([
-        int(x) for x in np.unique(np.floor(years / 10)) * 10 + 1 if x < max(years)+1
-    ])
+    decade_starts = np.array(
+        [int(x) for x in np.unique(np.floor(years / 10)) * 10 + 1 if x < max(years) + 1]
+    )
     decade_ends = decade_starts + 9
     # Restrict values to years actually in the file
     decade_starts[0] = max(decade_starts[0], min(years))
@@ -74,7 +70,9 @@ for f, file in enumerate(file_list):
             decade_str = f"{decade_start}-{decade_end}"
 
             # Get subset of Dataset for this decade
-            where_this_decade = np.where((years >= decade_start) & (years <= decade_end))[0]
+            where_this_decade = np.where(
+                (years >= decade_start) & (years <= decade_end)
+            )[0]
             if len(where_this_decade) == 0:
                 logging.error("No years found in %s!!!", decade_str)
             da_decade = da.isel(time=where_this_decade)
@@ -96,10 +94,10 @@ for f, file in enumerate(file_list):
                         os.makedirs(os.path.dirname(logfile))
                     logger = logging.FileHandler(
                         filename=logfile,
-                        mode='w',
+                        mode="w",
                     )
                     logger.setLevel(logging.WARNING)
-                    formatter = logging.Formatter('%(message)s')
+                    formatter = logging.Formatter("%(message)s")
                     logger.setFormatter(formatter)
                     logging.getLogger().addHandler(logger)
                     file_problem_found = True
