@@ -25,6 +25,26 @@ INDENT = "   "
 VAR_INDENT = 1 * INDENT
 PROBLEM_INDENT = 2 * INDENT
 
+GS_ALGO_CROP_LIST = [
+    "mai",
+    "mil",
+    "ri1",
+    "ri2",
+    "sor",
+    "soy",
+    "swh",
+    "wwh",
+]
+CROP_LIST = GS_ALGO_CROP_LIST + [
+    "cas",
+    "nut",
+    "pea",
+    "rap",
+    "sgb",
+    "sgc",
+    "sun",
+]
+
 
 # %% Classes
 
@@ -61,11 +81,16 @@ class TimeInfo:
 # %% Functions
 
 
-def open_dataset(file):
+def open_dataset(file, logger, pf):
     """
     Open the dataset without decoding times, because cftime has issues with ISIMIP's format
     """
     ds = xr.open_dataset(file, decode_times=False)
+
+    # Set up log file
+    logfile = os.path.join(TXTDIR, file).replace(".nc", ".txt")
+    if os.path.exists(logfile):
+        os.remove(logfile)
 
     # Process time units
     time_units_in = ds["time"].attrs["units"]
@@ -77,7 +102,47 @@ def open_dataset(file):
         ds["time"] = new_time_da
     else:
         raise RuntimeError("Unknown time units: " + time_units_in)
-    return ds
+
+    # Get crop info
+    if "Crop" in ds.attrs:
+        crop = ds.attrs["Crop"][0:3]
+    else:
+        logger, pf = problem_setup(file, logger, logfile, pf)
+        logging.warning("%sAttribute 'Crop' missing; getting from filename", VAR_INDENT)
+        crop = os.path.basename(file).split("_")[3][0:3]
+    if crop not in CROP_LIST:
+        raise ValueError(f"Unexpected crop: {crop}")
+    ds.attrs["crop"] = crop
+    ds.attrs["gs_algo"] = crop in GS_ALGO_CROP_LIST
+
+    return ds, pf, logfile, logger
+
+
+def get_ok_ranges(attrs):
+
+    # ri2 can have date 0, which means it's not actually present
+    if attrs["crop"] == "ri2":
+        days_in_year = [0, 365]
+    else:
+        days_in_year = [1, 365]
+
+    # Harvest reason is 7 if growing season algorithm isn't applied
+    if attrs["gs_algo"]:
+        harvest_reason_range = [1, 6]
+    else:
+        harvest_reason_range = [7, 7]
+
+    ok_ranges = {
+        "growing_period": None,
+        "harvest_reason": harvest_reason_range,
+        "maturity_day": days_in_year,
+        "planting_day": days_in_year,
+        "planting_day-mavg": days_in_year,
+        "planting_day-mavg-window": None,
+        "planting_season": [1, 2],
+        "seasonality": None,
+    }
+    return ok_ranges
 
 
 def check_var_range(ok_range, pf, file, logfile, logger, this_var, da):
@@ -144,12 +209,12 @@ def process_decade(
     return logger, pf
 
 
-def problem_setup(file, logger, logfile, pf, this_var):
+def problem_setup(file, logger, logfile, pf, this_var=None):
     if not pf.file:
         logger = set_up_logger(logfile)
         pf.file = True
         logging.warning(file)
-    if not pf.var:
+    if this_var is not None and not pf.var:
         pf.var = True
         logging.warning("%s%s", VAR_INDENT, this_var)
     return logger, pf
@@ -169,22 +234,6 @@ def set_up_logger(logfile):
     return logger
 
 
-# %% Acceptable variable ranges
-days_in_year = [1, 365]
-
-# "None" means anything goes
-ok_ranges = {
-    "growing_period": None,
-    "harvest_reason": [1, 7],  # 7, I think, means "not a grain crop so not run"
-    "maturity_day": days_in_year,
-    "planting_day": days_in_year,
-    "planting_day-mavg": days_in_year,
-    "planting_day-mavg-window": None,
-    "planting_season": [1, 2],
-    "seasonality": None,
-}
-
-
 # %% Loop through all files
 
 
@@ -200,21 +249,17 @@ def main():
         print(f"{f+1}/{n_files}: {file}")
 
         # Open the file
-        ds = open_dataset(file)
+        pf.file = False
+        logger = None
+        ds, pf, logfile, logger = open_dataset(file, logger, pf)
+        ok_ranges = get_ok_ranges(ds.attrs)
 
         # Get all decades in this file
         timeinfo = TimeInfo(ds)
 
-        # Set up log file
-        logfile = os.path.join(TXTDIR, file).replace(".nc", ".txt")
-        if os.path.exists(logfile):
-            os.remove(logfile)
-
         # Loop through all variables
         var_list = list(ds.keys())
         var_list.sort()
-        pf.file = False
-        logger = None
         for this_var in var_list:
             da = ds[this_var]
             pf.var = False
