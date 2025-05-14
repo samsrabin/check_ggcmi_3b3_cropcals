@@ -1,0 +1,4 @@
+histsoc/ggcmi-crop-calendar_gfdl-esm4_histsoc_nut-noirr_annual_1991_2014.nc
+   Attribute 'Crop' missing; getting from filename
+   planting_season
+      Variable range 9.969209968386869e+36-9.969209968386869e+36 outside limits (1-2)

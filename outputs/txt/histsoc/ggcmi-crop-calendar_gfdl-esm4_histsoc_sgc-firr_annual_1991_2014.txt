@@ -1,0 +1,8 @@
+histsoc/ggcmi-crop-calendar_gfdl-esm4_histsoc_sgc-firr_annual_1991_2014.nc
+   Attribute 'Crop' missing; getting from filename
+   harvest_reason
+      Variable range 9.969209968386869e+36-9.969209968386869e+36 outside limits (7-7)
+   planting_day-mavg
+      Variable range 9.969209968386869e+36-9.969209968386869e+36 outside limits (1-365)
+   planting_season
+      Variable range 9.969209968386869e+36-9.969209968386869e+36 outside limits (1-2)

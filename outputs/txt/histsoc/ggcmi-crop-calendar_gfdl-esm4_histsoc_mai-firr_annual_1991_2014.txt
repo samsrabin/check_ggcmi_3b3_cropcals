@@ -1,0 +1,14 @@
+histsoc/ggcmi-crop-calendar_gfdl-esm4_histsoc_mai-firr_annual_1991_2014.nc
+   growing_period
+      1991-2000: Only masks vary
+      2001-2010: Only masks vary
+   maturity_day
+      1991-2000: Only masks vary
+      2001-2010: Only masks vary
+   planting_day-mavg
+      1991-2000: Masks and non-NaN values vary; max diff 42.0
+      2001-2010: Masks and non-NaN values vary; max diff 56.0
+      2011-2014: Only non-NaN values vary; max diff 18.0
+   planting_day-mavg-window
+      1991-2000: Only masks vary
+      2001-2010: Only masks vary

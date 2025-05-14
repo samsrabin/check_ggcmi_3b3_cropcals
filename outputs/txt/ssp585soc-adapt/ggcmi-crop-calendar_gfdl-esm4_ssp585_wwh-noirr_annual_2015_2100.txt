@@ -1,0 +1,35 @@
+ssp585soc-adapt/ggcmi-crop-calendar_gfdl-esm4_ssp585_wwh-noirr_annual_2015_2100.nc
+   Attribute 'Crop' missing; getting from filename
+   growing_period
+      Expected variation across time but found none
+   harvest_reason
+      Variable range 9.969209968386869e+36-9.969209968386869e+36 outside limits (1-6)
+      Expected variation across time but found none
+   maturity_day
+      2015-2020: Only masks vary
+      2021-2030: Masks and non-NaN values vary; max diff 182.0
+      2031-2040: Masks and non-NaN values vary; max diff 175.0
+      2041-2050: Masks and non-NaN values vary; max diff 168.0
+      2051-2060: Masks and non-NaN values vary; max diff 180.0
+      2061-2070: Masks and non-NaN values vary; max diff 181.0
+      2071-2080: Masks and non-NaN values vary; max diff 168.0
+      2081-2090: Masks and non-NaN values vary; max diff 152.0
+      2091-2100: Only non-NaN values vary; max diff 173.0
+   planting_day
+      2021-2030: Only non-NaN values vary; max diff 128.0
+      2031-2040: Only non-NaN values vary; max diff 152.0
+      2041-2050: Only non-NaN values vary; max diff 152.0
+      2051-2060: Only non-NaN values vary; max diff 152.0
+      2061-2070: Only non-NaN values vary; max diff 166.0
+      2071-2080: Only non-NaN values vary; max diff 152.0
+      2081-2090: Only non-NaN values vary; max diff 166.0
+      2091-2100: Only non-NaN values vary; max diff 152.0
+   planting_day-mavg
+      Variable range 9.969209968386869e+36-9.969209968386869e+36 outside limits (1-365)
+      Expected variation across time but found none
+   planting_day-mavg-window
+      Expected variation across time but found none
+   planting_season
+      Variable range 9.969209968386869e+36-9.969209968386869e+36 outside limits (1-2)
+   seasonality
+      Expected variation across time but found none

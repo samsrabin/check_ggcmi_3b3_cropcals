@@ -1,0 +1,68 @@
+ssp126soc-adapt/ggcmi-crop-calendar_ukesm1-0-ll_ssp126_mai-firr_annual_2015_2100.nc
+   growing_period
+      2015-2020: Only masks vary
+      2021-2030: Masks and non-NaN values vary; max diff 83.0
+      2031-2040: Masks and non-NaN values vary; max diff 49.0
+      2041-2050: Masks and non-NaN values vary; max diff 86.0
+      2051-2060: Masks and non-NaN values vary; max diff 226.0
+      2061-2070: Masks and non-NaN values vary; max diff 116.0
+      2071-2080: Masks and non-NaN values vary; max diff 190.0
+      2081-2090: Masks and non-NaN values vary; max diff 255.0
+      2091-2100: Masks and non-NaN values vary; max diff 167.0
+   harvest_reason
+      2021-2030: Only non-NaN values vary; max diff 4.0
+      2031-2040: Only non-NaN values vary; max diff 4.0
+      2041-2050: Only non-NaN values vary; max diff 4.0
+      2051-2060: Only non-NaN values vary; max diff 4.0
+      2061-2070: Only non-NaN values vary; max diff 4.0
+      2071-2080: Only non-NaN values vary; max diff 4.0
+      2081-2090: Only non-NaN values vary; max diff 4.0
+      2091-2100: Only non-NaN values vary; max diff 4.0
+   maturity_day
+      2015-2020: Only masks vary
+      2021-2030: Masks and non-NaN values vary; max diff 83.0
+      2031-2040: Masks and non-NaN values vary; max diff 89.0
+      2041-2050: Masks and non-NaN values vary; max diff 62.0
+      2051-2060: Masks and non-NaN values vary; max diff 132.0
+      2061-2070: Masks and non-NaN values vary; max diff 99.0
+      2071-2080: Masks and non-NaN values vary; max diff 137.0
+      2081-2090: Masks and non-NaN values vary; max diff 110.0
+      2091-2100: Masks and non-NaN values vary; max diff 131.0
+   planting_day
+      2021-2030: Only non-NaN values vary; max diff 67.0
+      2031-2040: Only non-NaN values vary; max diff 113.0
+      2041-2050: Only non-NaN values vary; max diff 83.0
+      2051-2060: Only non-NaN values vary; max diff 128.0
+      2061-2070: Only non-NaN values vary; max diff 83.0
+      2071-2080: Only non-NaN values vary; max diff 53.0
+      2081-2090: Only non-NaN values vary; max diff 174.0
+      2091-2100: Only non-NaN values vary; max diff 144.0
+   planting_day-mavg
+      2015-2020: Masks and non-NaN values vary; max diff 30.0
+      2021-2030: Masks and non-NaN values vary; max diff 67.0
+      2031-2040: Masks and non-NaN values vary; max diff 113.0
+      2041-2050: Masks and non-NaN values vary; max diff 83.0
+      2051-2060: Masks and non-NaN values vary; max diff 128.0
+      2061-2070: Masks and non-NaN values vary; max diff 97.0
+      2071-2080: Masks and non-NaN values vary; max diff 56.0
+      2081-2090: Masks and non-NaN values vary; max diff 174.0
+      2091-2100: Masks and non-NaN values vary; max diff 144.0
+   planting_day-mavg-window
+      2015-2020: Only masks vary
+      2021-2030: Masks and non-NaN values vary; max diff 1.0
+      2031-2040: Masks and non-NaN values vary; max diff 1.0
+      2041-2050: Masks and non-NaN values vary; max diff 1.0
+      2051-2060: Masks and non-NaN values vary; max diff 1.0
+      2061-2070: Masks and non-NaN values vary; max diff 1.0
+      2071-2080: Masks and non-NaN values vary; max diff 1.0
+      2081-2090: Masks and non-NaN values vary; max diff 1.0
+      2091-2100: Masks and non-NaN values vary; max diff 1.0
+   seasonality
+      2021-2030: Only non-NaN values vary; max diff 3.0
+      2031-2040: Only non-NaN values vary; max diff 1.0
+      2041-2050: Only non-NaN values vary; max diff 3.0
+      2051-2060: Only non-NaN values vary; max diff 2.0
+      2061-2070: Only non-NaN values vary; max diff 3.0
+      2071-2080: Only non-NaN values vary; max diff 2.0
+      2081-2090: Only non-NaN values vary; max diff 1.0
+      2091-2100: Only non-NaN values vary; max diff 3.0
