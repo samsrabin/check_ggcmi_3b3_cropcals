@@ -22,7 +22,7 @@ if not os.path.exists(txtdir):
     os.makedirs(txtdir)
 
 indent = "   "
-decade_indent = 2 * indent
+problem_indent = 2 * indent
 
 
 # %% Classes
@@ -79,6 +79,22 @@ def open_dataset(file):
     return ds
 
 
+def check_var_range(ok_range, pf, file, logfile, logger, this_var, var_indent, da, problem_indent):
+    ok_min = ok_range[0]
+    ok_max = ok_range[1]
+    this_min = np.nanmin(da)
+    this_max = np.nanmax(da)
+    too_low = this_min < ok_min
+    too_high = this_max > ok_max
+    if too_low or too_high:
+        # pylint: disable=logging-fstring-interpolation
+        logger, pf = problem_setup(file, logger, logfile, pf, this_var, var_indent)
+        logging.warning(
+            f"{problem_indent}Variable range {this_min}-{this_max} outside limits ({ok_min}-{ok_max})"
+        )
+    return logger, pf
+
+
 def log_decade_problem(decade, mask_constant, da_min, da_max, values_constant):
     masks_vary = np.any(~mask_constant)
     nonnan_values_vary = np.any(~values_constant)
@@ -93,7 +109,7 @@ def log_decade_problem(decade, mask_constant, da_min, da_max, values_constant):
         if not masks_vary:
             raise RuntimeError("???")
         msg = "Only masks vary"
-    logging.warning("%s%s: %s", decade_indent, decade.str, msg)
+    logging.warning("%s%s: %s", problem_indent, decade.str, msg)
 
 
 def process_decade(
@@ -123,14 +139,19 @@ def process_decade(
     values_constant = (da_min == da_max) | always_nan
 
     if np.any(~(mask_constant & values_constant)):
-        if not pf.file:
-            logger = set_up_logger(logfile)
-            pf.file = True
-            logging.warning(file)
-        if not pf.var:
-            pf.var = True
-            logging.warning("%s%s", var_indent, this_var)
+        logger, pf = problem_setup(file, logger, logfile, pf, this_var, var_indent)
         log_decade_problem(decade, mask_constant, da_min, da_max, values_constant)
+    return logger, pf
+
+
+def problem_setup(file, logger, logfile, pf, this_var, var_indent):
+    if not pf.file:
+        logger = set_up_logger(logfile)
+        pf.file = True
+        logging.warning(file)
+    if not pf.var:
+        pf.var = True
+        logging.warning("%s%s", var_indent, this_var)
     return logger, pf
 
 
@@ -146,6 +167,22 @@ def set_up_logger(logfile):
     logger.setFormatter(formatter)
     logging.getLogger().addHandler(logger)
     return logger
+
+
+# %% Acceptable variable ranges
+days_in_year = [1, 365]
+
+# "None" means anything goes
+ok_ranges = {
+    "growing_period": None,
+    "harvest_reason": [1, 7],  # 7, I think, means "not a grain crop so not run"
+    "maturity_day": days_in_year,
+    "planting_day": days_in_year,
+    "planting_day-mavg": days_in_year,
+    "planting_day-mavg-window": None,
+    "planting_season": [1, 2],
+    "seasonality": None,
+}
 
 
 # %% Loop through all files
@@ -182,6 +219,20 @@ def main():
             var_indent = 1 * indent
             da = ds[this_var]
             pf.var = False
+
+            # Check variable for acceptable bounds
+            if ok_ranges[this_var] is not None:
+                logger, pf = check_var_range(
+                    ok_ranges[this_var],
+                    pf,
+                    file,
+                    logfile,
+                    logger,
+                    this_var,
+                    var_indent,
+                    da,
+                    problem_indent,
+                )
 
             # Check variable for constancy within each decade
             for d in np.arange(len(timeinfo.dec_ends)):
