@@ -63,6 +63,7 @@ for f, file in enumerate(file_list):
 
     # Check each variable for constancy
     file_problem_found = False
+    logger = None
     for this_var in var_list:
         var_indent = 1 * indent
         da = ds[this_var]
@@ -93,11 +94,14 @@ for f, file in enumerate(file_list):
                 if not file_problem_found:
                     if not os.path.exists(os.path.dirname(logfile)):
                         os.makedirs(os.path.dirname(logfile))
-                    logging.basicConfig(
+                    logger = logging.FileHandler(
                         filename=logfile,
-                        level=logging.INFO,
-                        format='%(message)s',
-                        filemode='w')
+                        mode='w',
+                    )
+                    logger.setLevel(logging.WARNING)
+                    formatter = logging.Formatter('%(message)s')
+                    logger.setFormatter(formatter)
+                    logging.getLogger().addHandler(logger)
                     file_problem_found = True
                     logging.warning(file)
                 if not var_problem_found:
@@ -117,3 +121,6 @@ for f, file in enumerate(file_list):
                         raise RuntimeError("???")
                     msg = "Only masks vary"
                 logging.warning("%s%s: %s", decade_indent, decade_str, msg)
+    if logger:
+        logging.getLogger().removeHandler(logger)
+        logger.close()
