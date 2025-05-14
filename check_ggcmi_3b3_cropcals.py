@@ -15,16 +15,19 @@ import logging
 import numpy as np
 import xarray as xr
 
+# Set up directories
 os.chdir("/glade/work/samrabin/ggcmi_3b3_cropcals/files")
 OUTDIR = os.path.join(os.getcwd(), os.pardir, "outputs")
 TXTDIR = os.path.join(OUTDIR, "txt")
 if not os.path.exists(TXTDIR):
     os.makedirs(TXTDIR)
 
+# Indentation for logfile messages
 INDENT = "   "
 VAR_INDENT = 1 * INDENT
 PROBLEM_INDENT = 2 * INDENT
 
+# List of crops that we expect to have had the growing season algorithm applied
 GS_ALGO_CROP_LIST = [
     "mai",
     "ri1",
@@ -33,6 +36,8 @@ GS_ALGO_CROP_LIST = [
     "swh",
     "wwh",
 ]
+
+# List of all crops
 CROP_LIST = GS_ALGO_CROP_LIST + [
     "cas",
     "mil",
@@ -50,6 +55,10 @@ CROP_LIST = GS_ALGO_CROP_LIST + [
 
 
 class Decade:
+    """
+    A simple class that helps us pass decade info more simply
+    """
+
     def __init__(self, timeinfo, d):
         self.end = timeinfo.dec_ends[d]
         self.start = timeinfo.dec_starts[d]
@@ -57,12 +66,20 @@ class Decade:
 
 
 class ProblemsFound:
+    """
+    A simple class to keep track of whether the current file or variable have had problems found
+    """
+
     def __init__(self):
         self.file = False
         self.var = False
 
 
 class TimeInfo:
+    """
+    A simple class that helps us pass time info more simply
+    """
+
     def __init__(self, ds):
         self.years = ds["time"].values
         self.dec_starts = np.array(
@@ -119,6 +136,14 @@ def open_dataset(file, logger, pf):
 
 
 def get_ok_ranges(attrs):
+    """Get acceptable ranges for variables, depending on the crop
+
+    Args:
+        attrs (dict): Dataset attributes
+
+    Returns:
+        dict: Acceptable ranges for each variable. None: Variable can take any value.
+    """
 
     # ri2 can have date 0, which means it's not actually present
     if attrs["crop"] == "ri2":
@@ -148,6 +173,22 @@ def get_ok_ranges(attrs):
 def check_constancy(
     file, logger, logfile, pf, this_var, da, decade=None, expect_const=True
 ):
+    """Check whether a DataArray varies over time
+
+    Args:
+        file (str): Path to Dataset file
+        logger (logging.FileHandler): For writing to this Dataset's output .txt file
+        logfile (str): Path to this Dataset's output .txt file
+        pf (ProblemsFound)
+        this_var (str): Name of the variable to check
+        da (xarray.DataArray): DataArray to check
+        decade (Decade, optional): Decade to check. Defaults to None.
+        expect_const (bool, optional): Whether we expect the variable to be constant over time.
+                                       Defaults to True.
+
+    Raises:
+        NotImplementedError: Haven't yet implemented error message
+    """
     mask_min = np.isnan(da).min(dim="time")
     mask_max = np.isnan(da).max(dim="time")
     mask_constant = mask_min == mask_max
@@ -175,6 +216,9 @@ def check_constancy(
 
 
 def check_var_range(ok_range, pf, file, logfile, logger, this_var, da):
+    """
+    Check whether variable's data is within acceptable bounds
+    """
     ok_min = ok_range[0]
     ok_max = ok_range[1]
     this_min = np.nanmin(da)
@@ -191,6 +235,9 @@ def check_var_range(ok_range, pf, file, logfile, logger, this_var, da):
 
 
 def log_decade_problem(decade, mask_constant, da_min, da_max, values_constant):
+    """
+    Log a warning message when data unexpectedly varies within a decade
+    """
     masks_vary = np.any(~mask_constant)
     nonnan_values_vary = np.any(~values_constant)
     if nonnan_values_vary:
@@ -208,6 +255,9 @@ def log_decade_problem(decade, mask_constant, da_min, da_max, values_constant):
 
 
 def check_constancy_within_decades(file, logfile, timeinfo, this_var, da, logger, pf):
+    """
+    Check that data does not vary over time within each decade
+    """
     for d in np.arange(len(timeinfo.dec_ends)):
         decade = Decade(timeinfo, d)
 
@@ -228,6 +278,9 @@ def check_constancy_within_decades(file, logfile, timeinfo, this_var, da, logger
 
 
 def problem_setup(file, logger, logfile, pf, this_var=None):
+    """
+    Set up the log file and print initial messages, if needed
+    """
     if not pf.file:
         logger = set_up_logger(logfile)
         pf.file = True
@@ -239,6 +292,9 @@ def problem_setup(file, logger, logfile, pf, this_var=None):
 
 
 def set_up_logger(logfile):
+    """
+    Set up the log file
+    """
     if not os.path.exists(os.path.dirname(logfile)):
         os.makedirs(os.path.dirname(logfile))
     logger = logging.FileHandler(
@@ -307,6 +363,8 @@ def main():
             else:
                 # Check constancy across entire file
                 logger, pf = check_constancy(file, logger, logfile, pf, this_var, da)
+
+        # Close the logfile, if it was ever opened
         if logger:
             logging.getLogger().removeHandler(logger)
             logger.close()
