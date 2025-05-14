@@ -11,16 +11,10 @@
 import os
 import glob
 import logging
+import argparse
 
 import numpy as np
 import xarray as xr
-
-# Set up directories
-os.chdir("/glade/work/samrabin/ggcmi_3b3_cropcals/files")
-OUTDIR = os.path.join(os.getcwd(), os.pardir, "outputs")
-TXTDIR = os.path.join(OUTDIR, "txt")
-if not os.path.exists(TXTDIR):
-    os.makedirs(TXTDIR)
 
 # Indentation for logfile messages
 INDENT = "   "
@@ -98,14 +92,14 @@ class TimeInfo:
 # %% Functions
 
 
-def open_dataset(file, logger, pf):
+def open_dataset(file, logger, pf, txtdir):
     """
     Open the dataset without decoding times, because cftime has issues with ISIMIP's format
     """
     ds = xr.open_dataset(file, decode_times=False)
 
     # Set up log file
-    logfile = os.path.join(TXTDIR, file).replace(".nc", ".txt")
+    logfile = os.path.join(txtdir, file).replace(".nc", ".txt")
     if os.path.exists(logfile):
         os.remove(logfile)
 
@@ -311,8 +305,16 @@ def set_up_logger(logfile):
 # %% Loop through all files
 
 
-def main():
+def main(args):
     # pylint: disable=too-many-nested-blocks
+
+    # Set up directories
+    os.chdir(args.in_dir)
+    txtdir = os.path.join(args.out_dir, "txt")
+    if not os.path.exists(txtdir):
+        os.makedirs(txtdir)
+
+    # Get list of input files
     file_list = glob.glob("*/*.nc")
     file_list.sort()
     n_files = len(file_list)
@@ -325,7 +327,7 @@ def main():
         # Open the file
         pf.file = False
         logger = None
-        ds, pf, logfile, logger = open_dataset(file, logger, pf)
+        ds, pf, logfile, logger = open_dataset(file, logger, pf, txtdir)
         ok_ranges = get_ok_ranges(ds.attrs)
 
         # Get all decades in this file
@@ -370,4 +372,23 @@ def main():
             logger.close()
 
 
-main()
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-i",
+        "--in-dir",
+        help="Directory containing the input files",
+        required=True,
+    )
+    parser.add_argument(
+        "-o",
+        "--out-dir",
+        help="Where to save the output files",
+        required=True,
+    )
+
+    my_args = parser.parse_args()
+    my_args.in_dir = os.path.abspath(my_args.in_dir)
+    my_args.out_dir = os.path.abspath(my_args.out_dir)
+
+    main(my_args)
