@@ -145,7 +145,9 @@ def get_ok_ranges(attrs):
     return ok_ranges
 
 
-def check_constancy(file, logger, logfile, pf, this_var, da, decade=None):
+def check_constancy(
+    file, logger, logfile, pf, this_var, da, decade=None, expect_const=True
+):
     mask_min = np.isnan(da).min(dim="time")
     mask_max = np.isnan(da).max(dim="time")
     mask_constant = mask_min == mask_max
@@ -155,7 +157,8 @@ def check_constancy(file, logger, logfile, pf, this_var, da, decade=None):
     da_max = da.max(dim="time", skipna=True)
     values_constant = (da_min == da_max) | always_nan
 
-    if np.any(~(mask_constant & values_constant)):
+    is_not_constant = np.any(~(mask_constant & values_constant))
+    if is_not_constant and expect_const:
         logger, pf = problem_setup(file, logger, logfile, pf, this_var)
         if decade is not None:
             log_decade_problem(decade, mask_constant, da_min, da_max, values_constant)
@@ -163,6 +166,11 @@ def check_constancy(file, logger, logfile, pf, this_var, da, decade=None):
             raise NotImplementedError(
                 "Expected entire file to be constant but it's not; log this"
             )
+    elif (not is_not_constant) and (not expect_const):
+        logger, pf = problem_setup(file, logger, logfile, pf, this_var)
+        logging.warning(
+            "%sExpected variation across time but found none", PROBLEM_INDENT
+        )
     return logger, pf
 
 
@@ -291,6 +299,11 @@ def main():
                 logger, pf = check_constancy_within_decades(
                     file, logfile, timeinfo, this_var, da, logger, pf
                 )
+                # Check that variable does change over time
+                if this_var not in ["planting_season"]:
+                    logger, pf = check_constancy(
+                        file, logger, logfile, pf, this_var, da, expect_const=False
+                    )
             else:
                 # Check constancy across entire file
                 logger, pf = check_constancy(file, logger, logfile, pf, this_var, da)
