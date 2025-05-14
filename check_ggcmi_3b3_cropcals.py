@@ -3,12 +3,17 @@
 
 import os
 import glob
+import logging
 import matplotlib.pyplot as plt
 
 import numpy as np
 import xarray as xr
 
 os.chdir("/glade/work/samrabin/ggcmi_3b3_cropcals/files")
+outdir = os.path.join(os.getcwd(), os.pardir, "outputs")
+txtdir = os.path.join(outdir, "txt")
+if not os.path.exists(txtdir):
+    os.makedirs(txtdir)
 
 
 # %% Test with one file
@@ -41,6 +46,9 @@ decade_starts = np.array([
 decade_ends = decade_starts + 9
 
 indent = "   "
+logfile = os.path.join(txtdir, file).replace(".nc", ".txt")
+if os.path.exists(logfile):
+    os.remove(logfile)
 
 var_list = list(ds.keys())
 var_list.sort()
@@ -59,7 +67,7 @@ for this_var in var_list:
         # Get subset of Dataset for this decade
         where_this_decade = np.where((years >= decade_start) & (years <= decade_end))[0]
         if len(where_this_decade) == 0:
-            raise ValueError(f"No years found in {decade_str}")
+            logging.error("No years found in %s!!!", decade_str)
         da_decade = da.isel(time=where_this_decade)
 
         # NaN masks
@@ -75,11 +83,18 @@ for this_var in var_list:
 
         if np.any(~(mask_constant & values_constant)):
             if not file_problem_found:
+                if not os.path.exists(os.path.dirname(logfile)):
+                    os.makedirs(os.path.dirname(logfile))
+                logging.basicConfig(
+                    filename=logfile,
+                    level=logging.INFO,
+                    format='%(message)s',
+                    filemode='w')
                 file_problem_found = True
-                print(file)
+                logging.warning(file)
             if not var_problem_found:
                 var_problem_found = True
-                print(var_indent + this_var)
+                logging.warning("%s%s", var_indent, this_var)
             masks_vary = np.any(~mask_constant)
             nonnan_values_vary = np.any(~values_constant)
             if nonnan_values_vary:
@@ -93,7 +108,7 @@ for this_var in var_list:
                 if not masks_vary:
                     raise RuntimeError("???")
                 msg = "Only masks vary"
-            print(f"{decade_indent}{decade_str}: {msg}")
+            logging.warning("%s%s: %s", decade_indent, decade_str, msg)
 
             # (~(mask_constant & values_constant)).plot()
             # plt.show()
