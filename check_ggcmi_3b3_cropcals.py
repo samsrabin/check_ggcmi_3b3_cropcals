@@ -315,7 +315,7 @@ def main(args):
         os.makedirs(txtdir)
 
     # Get list of input files
-    file_list = glob.glob("*/*.nc")
+    file_list = glob.glob("**/*.nc", recursive=True)
     file_list.sort()
     n_files = len(file_list)
 
