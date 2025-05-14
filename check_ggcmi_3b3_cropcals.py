@@ -16,13 +16,14 @@ import numpy as np
 import xarray as xr
 
 os.chdir("/glade/work/samrabin/ggcmi_3b3_cropcals/files")
-outdir = os.path.join(os.getcwd(), os.pardir, "outputs")
-txtdir = os.path.join(outdir, "txt")
-if not os.path.exists(txtdir):
-    os.makedirs(txtdir)
+OUTDIR = os.path.join(os.getcwd(), os.pardir, "outputs")
+TXTDIR = os.path.join(OUTDIR, "txt")
+if not os.path.exists(TXTDIR):
+    os.makedirs(TXTDIR)
 
-indent = "   "
-problem_indent = 2 * indent
+INDENT = "   "
+VAR_INDENT = 1 * INDENT
+PROBLEM_INDENT = 2 * INDENT
 
 
 # %% Classes
@@ -79,7 +80,7 @@ def open_dataset(file):
     return ds
 
 
-def check_var_range(ok_range, pf, file, logfile, logger, this_var, var_indent, da, problem_indent):
+def check_var_range(ok_range, pf, file, logfile, logger, this_var, da):
     ok_min = ok_range[0]
     ok_max = ok_range[1]
     this_min = np.nanmin(da)
@@ -88,9 +89,9 @@ def check_var_range(ok_range, pf, file, logfile, logger, this_var, var_indent, d
     too_high = this_max > ok_max
     if too_low or too_high:
         # pylint: disable=logging-fstring-interpolation
-        logger, pf = problem_setup(file, logger, logfile, pf, this_var, var_indent)
+        logger, pf = problem_setup(file, logger, logfile, pf, this_var)
         logging.warning(
-            f"{problem_indent}Variable range {this_min}-{this_max} outside limits ({ok_min}-{ok_max})"
+            f"{PROBLEM_INDENT}Variable range {this_min}-{this_max} outside limits ({ok_min}-{ok_max})"
         )
     return logger, pf
 
@@ -109,7 +110,7 @@ def log_decade_problem(decade, mask_constant, da_min, da_max, values_constant):
         if not masks_vary:
             raise RuntimeError("???")
         msg = "Only masks vary"
-    logging.warning("%s%s: %s", problem_indent, decade.str, msg)
+    logging.warning("%s%s: %s", PROBLEM_INDENT, decade.str, msg)
 
 
 def process_decade(
@@ -119,7 +120,6 @@ def process_decade(
     logfile,
     pf,
     this_var,
-    var_indent,
     da,
     decade,
 ):
@@ -139,19 +139,19 @@ def process_decade(
     values_constant = (da_min == da_max) | always_nan
 
     if np.any(~(mask_constant & values_constant)):
-        logger, pf = problem_setup(file, logger, logfile, pf, this_var, var_indent)
+        logger, pf = problem_setup(file, logger, logfile, pf, this_var)
         log_decade_problem(decade, mask_constant, da_min, da_max, values_constant)
     return logger, pf
 
 
-def problem_setup(file, logger, logfile, pf, this_var, var_indent):
+def problem_setup(file, logger, logfile, pf, this_var):
     if not pf.file:
         logger = set_up_logger(logfile)
         pf.file = True
         logging.warning(file)
     if not pf.var:
         pf.var = True
-        logging.warning("%s%s", var_indent, this_var)
+        logging.warning("%s%s", VAR_INDENT, this_var)
     return logger, pf
 
 
@@ -206,7 +206,7 @@ def main():
         timeinfo = TimeInfo(ds)
 
         # Set up log file
-        logfile = os.path.join(txtdir, file).replace(".nc", ".txt")
+        logfile = os.path.join(TXTDIR, file).replace(".nc", ".txt")
         if os.path.exists(logfile):
             os.remove(logfile)
 
@@ -216,7 +216,6 @@ def main():
         pf.file = False
         logger = None
         for this_var in var_list:
-            var_indent = 1 * indent
             da = ds[this_var]
             pf.var = False
 
@@ -229,9 +228,7 @@ def main():
                     logfile,
                     logger,
                     this_var,
-                    var_indent,
                     da,
-                    problem_indent,
                 )
 
             # Check variable for constancy within each decade
@@ -246,7 +243,6 @@ def main():
                     logfile,
                     pf,
                     this_var,
-                    var_indent,
                     da,
                     decade,
                 )
