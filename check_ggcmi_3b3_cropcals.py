@@ -379,16 +379,14 @@ if __name__ == "__main__":
         "--in-dir",
         help="Directory containing the input files",
         required=True,
+        type=os.path.abspath,
     )
     parser.add_argument(
         "-o",
         "--out-dir",
         help="Where to save the output files",
         required=True,
+        type=os.path.abspath,
     )
 
-    my_args = parser.parse_args()
-    my_args.in_dir = os.path.abspath(my_args.in_dir)
-    my_args.out_dir = os.path.abspath(my_args.out_dir)
-
-    main(my_args)
+    main(parser.parse_args())
