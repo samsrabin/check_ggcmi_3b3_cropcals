@@ -145,6 +145,27 @@ def get_ok_ranges(attrs):
     return ok_ranges
 
 
+def check_constancy(file, logger, logfile, pf, this_var, da, decade=None):
+    mask_min = np.isnan(da).min(dim="time")
+    mask_max = np.isnan(da).max(dim="time")
+    mask_constant = mask_min == mask_max
+    always_nan = mask_constant & (mask_max == 1)
+
+    da_min = da.min(dim="time", skipna=True)
+    da_max = da.max(dim="time", skipna=True)
+    values_constant = (da_min == da_max) | always_nan
+
+    if np.any(~(mask_constant & values_constant)):
+        logger, pf = problem_setup(file, logger, logfile, pf, this_var)
+        if decade is not None:
+            log_decade_problem(decade, mask_constant, da_min, da_max, values_constant)
+        else:
+            raise NotImplementedError(
+                "Expected entire file to be constant but it's not; log this"
+            )
+    return logger, pf
+
+
 def check_var_range(ok_range, pf, file, logfile, logger, this_var, da):
     ok_min = ok_range[0]
     ok_max = ok_range[1]
@@ -178,34 +199,23 @@ def log_decade_problem(decade, mask_constant, da_min, da_max, values_constant):
     logging.warning("%s%s: %s", PROBLEM_INDENT, decade.str, msg)
 
 
-def process_decade(
-    file,
-    years,
-    logger,
-    logfile,
-    pf,
-    this_var,
-    da,
-    decade,
-):
-    where_this_decade = np.where((years >= decade.start) & (years <= decade.end))[0]
-    if len(where_this_decade) == 0:
-        logging.error("No years found in %s!!!", decade.str)
-    da_decade = da.isel(time=where_this_decade)
+def check_constancy_within_decades(file, logfile, timeinfo, this_var, da, logger, pf):
+    for d in np.arange(len(timeinfo.dec_ends)):
+        decade = Decade(timeinfo, d)
 
-    # NaN masks
-    mask_min = np.isnan(da_decade).min(dim="time")
-    mask_max = np.isnan(da_decade).max(dim="time")
-    mask_constant = mask_min == mask_max
-    always_nan = mask_constant & (mask_max == 1)
+        # Get subset of Dataset for this decade
+        where_this_decade = np.where(
+            (timeinfo.years >= decade.start) & (timeinfo.years <= decade.end)
+        )[0]
+        if len(where_this_decade) == 0:
+            logging.error("No years found in %s!!!", decade.str)
+        da_decade = da.isel(time=where_this_decade)
 
-    da_min = da_decade.min(dim="time", skipna=True)
-    da_max = da_decade.max(dim="time", skipna=True)
-    values_constant = (da_min == da_max) | always_nan
+        # Check constancy in this decade
+        logger, pf = check_constancy(
+            file, logger, logfile, pf, this_var, da_decade, decade
+        )
 
-    if np.any(~(mask_constant & values_constant)):
-        logger, pf = problem_setup(file, logger, logfile, pf, this_var)
-        log_decade_problem(decade, mask_constant, da_min, da_max, values_constant)
     return logger, pf
 
 
@@ -276,21 +286,14 @@ def main():
                     da,
                 )
 
-            # Check variable for constancy within each decade
-            for d in np.arange(len(timeinfo.dec_ends)):
-                decade = Decade(timeinfo, d)
-
-                # Get subset of Dataset for this decade
-                logger, pf = process_decade(
-                    file,
-                    timeinfo.years,
-                    logger,
-                    logfile,
-                    pf,
-                    this_var,
-                    da,
-                    decade,
+            if ds.attrs["crop"] in GS_ALGO_CROP_LIST:
+                # Check variable for constancy within each decade
+                logger, pf = check_constancy_within_decades(
+                    file, logfile, timeinfo, this_var, da, logger, pf
                 )
+            else:
+                # Check constancy across entire file
+                logger, pf = check_constancy(file, logger, logfile, pf, this_var, da)
         if logger:
             logging.getLogger().removeHandler(logger)
             logger.close()
