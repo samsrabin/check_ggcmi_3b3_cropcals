@@ -27,7 +27,6 @@ PROBLEM_INDENT = 2 * INDENT
 
 GS_ALGO_CROP_LIST = [
     "mai",
-    "mil",
     "ri1",
     "ri2",
     "sor",
@@ -37,6 +36,7 @@ GS_ALGO_CROP_LIST = [
 ]
 CROP_LIST = GS_ALGO_CROP_LIST + [
     "cas",
+    "mil",
     "nut",
     "pea",
     "rap",
