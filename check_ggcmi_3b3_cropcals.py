@@ -18,11 +18,14 @@ if not os.path.exists(txtdir):
 
 # %% Test with one file
 
-file = "ssp126soc-adapt/ggcmi-crop-calendar_ukesm1-0-ll_ssp126_swh-firr_annual_2015_2100.nc"
+# file = "ssp126soc-adapt/ggcmi-crop-calendar_ukesm1-0-ll_ssp126_swh-firr_annual_2015_2100.nc"
 # file = "ssp126soc-adapt/ggcmi-crop-calendar_ukesm1-0-ll_ssp126_sun-firr_annual_2015_2100.nc"
+file = "histsoc/ggcmi-crop-calendar_gfdl-esm4_histsoc_swh-firr_annual_1991_2014.nc"
 
+# Open the dataset without decoding times, because cftime has issues with ISIMIP's format
 ds = xr.open_dataset(file, decode_times=False)
 
+# Process time units
 time_units_in = ds["time"].attrs["units"]
 if time_units_in == "years since 1601-1-1 00:00:00":
     new_times = ds["time"].values + 1601
@@ -37,13 +40,18 @@ if time_units_in == "years since 1601-1-1 00:00:00":
 else:
     raise RuntimeError("Unknown time units: " + time_units_in)
 
-# %%
-
+# Get all decades in this file
 years = ds["time"].values
 decade_starts = np.array([
     int(x) for x in np.unique(np.floor(years / 10)) * 10 + 1 if x < max(years)+1
 ])
 decade_ends = decade_starts + 9
+# Restrict values to years actually in the file
+decade_starts[0] = max(decade_starts[0], min(years))
+decade_ends[-1] = min(decade_ends[-1], max(years))
+
+
+# %%
 
 indent = "   "
 logfile = os.path.join(txtdir, file).replace(".nc", ".txt")
